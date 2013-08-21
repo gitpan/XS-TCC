@@ -1,0 +1,31 @@
+---
+abstract: 'Embed, wrap & compile C code in Perl without going to disk'
+author:
+  - 'Steffen Mueller <smueller@cpan.org>'
+build_requires:
+  Test::More: 0.88
+configure_requires:
+  Cwd: 0
+  ExtUtils::MakeMaker: 0
+  File::Basename: 0
+  File::Spec: 0
+  Getopt::Long: 0
+dynamic_config: 1
+generated_by: 'ExtUtils::MakeMaker version 6.64, CPAN::Meta::Converter version 2.120921'
+license: perl
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: XS-TCC
+no_index:
+  directory:
+    - t
+    - inc
+requires:
+  ExtUtils::Embed: 0
+  ExtUtils::Typemaps: 0.18_01
+  File::ShareDir: 0
+  File::Spec: 0
+  XSLoader: 0
+  perl: 5.008
+version: 0.01
