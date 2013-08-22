@@ -23,9 +23,10 @@ no_index:
     - inc
 requires:
   ExtUtils::Embed: 0
-  ExtUtils::Typemaps: 0.18_01
+  ExtUtils::ParseXS: 3.21
+  ExtUtils::Typemaps: 3.21
   File::ShareDir: 0
   File::Spec: 0
   XSLoader: 0
   perl: 5.008
-version: 0.01
+version: 0.02
