@@ -5,6 +5,7 @@ author:
 build_requires:
   Test::More: 0.88
 configure_requires:
+  Alien::TinyCC: 0.03
   Cwd: 0
   ExtUtils::MakeMaker: 0
   File::Basename: 0
@@ -29,4 +30,4 @@ requires:
   File::Spec: 0
   XSLoader: 0
   perl: 5.008
-version: 0.02
+version: 0.03

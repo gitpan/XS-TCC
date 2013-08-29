@@ -27,6 +27,7 @@
       },
       "configure" : {
          "requires" : {
+            "Alien::TinyCC" : "0.03",
             "Cwd" : "0",
             "ExtUtils::MakeMaker" : "0",
             "File::Basename" : "0",
@@ -47,5 +48,5 @@
       }
    },
    "release_status" : "stable",
-   "version" : "0.02"
+   "version" : "0.03"
 }

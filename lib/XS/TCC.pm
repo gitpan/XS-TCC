@@ -3,7 +3,7 @@ use 5.10.1;
 use strict;
 use warnings;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 use constant {
   TCC_OUTPUT_MEMORY     => 0,
@@ -22,8 +22,11 @@ use ExtUtils::Typemaps;
 use ExtUtils::ParseXS::Eval;
 use File::Spec;
 use File::ShareDir;
+use Alien::TinyCC;
 
 our $RuntimeIncludeDir = File::ShareDir::dist_dir('XS-TCC');
+our $TinyCCIncludeDir  = Alien::TinyCC->libtcc_include_path;
+our $TinyCCLibDir      = File::Spec->catdir( Alien::TinyCC->libtcc_library_path, 'tcc' );
 
 use XS::TCC::Typemaps;
 use XS::TCC::Parser;
@@ -40,12 +43,23 @@ our @EXPORT_OK = qw(
 );
 our %EXPORT_TAGS = (all => \@EXPORT_OK);
 
-our $CCOPTS = ExtUtils::Embed::ccopts;
+our $CCOPTS;
+{
+  local $0 = "NOT A -e LINE!"; # ExtUtils::Embed is daft
+  $CCOPTS = ExtUtils::Embed::ccopts;
+}
 
 my $CodeHeader = <<'HERE';
 #ifndef XS_TCC_INIT
 #define XS_TCC_INIT
 /* #define PERL_NO_GET_CONTEXT */
+
+#ifdef __XS_TCC_DARWIN__
+/* http://comments.gmane.org/gmane.comp.compilers.tinycc.devel/325 */
+typedef unsigned short __uint16_t, uint16_t;
+typedef unsigned int __uint32_t, uint32_t;
+typedef unsigned long __uint64_t, uint64_t;
+#endif
 
 #include <EXTERN.h>
 #include <perl.h>
@@ -115,15 +129,18 @@ S_croak_xs_usage(pTHX_ const CV *const cv, const char *const params)
 #endif /* XS_TCC_INIT */
 HERE
 
-
 SCOPE: {
   my @compilers; # never die...
   #my $compiler;
   sub _get_compiler {
     #return $compiler if $compiler;
     my $compiler = XS::TCC::TCCState->new;
-    $compiler->set_lib_path($RuntimeIncludeDir);
+    $compiler->set_lib_path($TinyCCLibDir);
+    $compiler->add_sysinclude_path($TinyCCIncludeDir);
     $compiler->add_sysinclude_path($RuntimeIncludeDir);
+    if ($^O eq 'darwin') {
+        $compiler->define_symbol("__XS_TCC_DARWIN__", 1);
+    }
     #push @compilers, $compiler;
     return $compiler;
   } # end _get_compiler
@@ -158,8 +175,6 @@ SCOPE: {
     return $core_typemap;
   } # end _get_core_typemap
 } # end SCOPE
-
-
 
 # current options:
 # code, warn_code, package, typemap, add_files, ccopts
@@ -226,12 +241,17 @@ sub tcc_inline (@) {
 
   # Do the compilation
   $compiler->set_options(($args{ccopts} // $CCOPTS));
-  $compiler->compile_string($final_code);
+  # compile_string() returns 0 if succeeded, -1 otherwise.
+  my $fatal = $compiler->compile_string($final_code);
   $compiler->relocate();
 
   if (defined $errmsg) {
     $errmsg = _build_compile_error_msg($errmsg, 1);
-    Carp::croak($errmsg);
+    if ($fatal) {
+      Carp::croak($errmsg);
+    } else {
+      Carp::carp($errmsg);
+    }
   }
 
   # install the XSUBs
@@ -450,6 +470,10 @@ but both beat regular Perl by a wide margin {citation required}.
 
 =over
 
+=item * L<Alien::TinyCC>
+
+=item * L<C::TinyCompiler>
+
 =item * L<C::TCC>
 
 =item * L<Inline> and L<Inline::C>
@@ -462,16 +486,13 @@ but both beat regular Perl by a wide margin {citation required}.
 
 Steffen Mueller E<lt>smueller@cpan.orgE<gt>
 
+With much appreciated contributions from:
+
+Tokuhiro Matsuno
+
+David Mertens
+
 =head1 COPYRIGHT AND LICENSE
-
-This package includes a copy of the TCC sources. The TCC sources are
-
-Copyright (C) Fabrice Bellard.
-
-  TCC is distributed under the GNU Lesser General Public License
-  (see COPYING file).
-
-The rest of the code is
 
 Copyright (C) 2013 by Steffen Mueller
 
