@@ -3,7 +3,7 @@ use 5.10.1;
 use strict;
 use warnings;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 use constant {
   TCC_OUTPUT_MEMORY     => 0,
@@ -64,6 +64,14 @@ typedef unsigned long __uint64_t, uint64_t;
 #include <EXTERN.h>
 #include <perl.h>
 #include <XSUB.h>
+
+#ifdef HAS_BUILTIN_EXPECT
+#  undef HAS_BUILTIN_EXPECT
+#  ifdef EXPECT
+#    undef EXPECT
+#    define EXPECT(expr, val) (expr)
+#  endif
+#endif
 
 #include <typemap_func.h>
 
@@ -494,7 +502,7 @@ David Mertens
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2013 by Steffen Mueller
+Copyright (C) 2013, 2014 by Steffen Mueller
 
   XS::TCC is distributed under the GNU Lesser General Public License
   (see COPYING file).
